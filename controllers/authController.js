@@ -1,5 +1,5 @@
 const userDB = require("../model/users");
-const { OK, INTERNAL_SERVER_ERROR, BAD_REQUEST,CONFLICT, NOT_FOUND, UNAUTHORIZED } = require("http-status-codes").StatusCodes;
+const { OK, INTERNAL_SERVER_ERROR, BAD_REQUEST,CONFLICT, NOT_FOUND, UNAUTHORIZED, NO_CONTENT } = require("http-status-codes").StatusCodes;
 const ROLES_LIST = require("../config/roles");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
@@ -56,7 +56,7 @@ const login = async (req, res) => {
 
        const updatedUserByRefr = await userDB.updateById(validEmail.id, {...validEmail, refresh_token:refreshToken});
 
-       res.cookie("jwt", refreshToken, { httpOnly: true, secure: false, maxAge: 24 * 60 * 60 * 1000});
+       res.cookie("jwt", refreshToken, { httpOnly: true, maxAge: 24 * 60 * 60 * 1000});
        res.status(OK).json({user: validEmail, accessToken, role});
         
 
@@ -65,8 +65,28 @@ const login = async (req, res) => {
     }
 }
 
+const logout = async (req, res) => {
+    const { jwt: refresh_t } = req.cookies;
+    if (!refresh_t) return res.status(UNAUTHORIZED).json({msg: "ooopps!! no refresh_token"});
+
+    try {
+        const user = await userDB.findByRefreshToken(refresh_t);
+        if(!user) {
+            res.clearCookie("jwt", { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+            return res.status(NO_CONTENT);
+        }
+
+        userDB.updateById(user.id, { ...user, refresh_token: ''});
+        res.clearCookie("jwt", { httpOnly: true, maxAge: 24 * 60 * 60 * 1000 });
+        res.status(OK).json({msg: "deleted seccss!!", email: user.email});
+    } catch (error) {
+        res.status(INTERNAL_SERVER_ERROR).json({msg: error.message});
+    }
+}
+
 module.exports = {
     addUser,
     getUsers,
-    login
+    login,
+    logout
 }
