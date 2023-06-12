@@ -6,7 +6,8 @@ const jsonWeb = require("jsonwebtoken");
 const refreshToken = async (req, res) => {
     const { jwt } = req.cookies;
     // return res.json({msg: jwt});
-    if(!jwt) return res.status(UNAUTHORIZED);
+    console.log(`jwt: ${jwt}`);
+    if(!jwt) return res.status(UNAUTHORIZED).json({msg: "refresh_token is missing!!"});
 
     try {
         const existRefeshT = await userDB.findByRefreshToken(jwt);
@@ -17,9 +18,9 @@ const refreshToken = async (req, res) => {
             const user = await userDB.findByEmail(decoded.email);
             if(!user) return res.status(NOT_FOUND);
 
-            const accessToken = jsonWeb.sign({email: user.email, role: user.roles}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "15min"});
+            const accessToken = jsonWeb.sign({email: user.email, role: user.roles}, process.env.ACCESS_TOKEN_SECRET, {expiresIn: "5s"});
 
-            res.status(OK).json({accessToken})
+            res.status(OK).json({accessToken, name: user.email});
         })
 
     } catch (error) {

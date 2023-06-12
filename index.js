@@ -9,16 +9,19 @@ const userRoute = require("./routes/auth");
 const refreshRoute = require("./routes/refresh_route");
 const employeeRoute = require("./routes/employeesRoute");
 //middleware
-const authMiddleWare = require("./middleware/authMiddleware")
+const authMiddleWare = require("./middleware/authMiddleware");
+const credentials = require("./middleware/originMiddleware");
 
 const app = express();
 const port = process.env.PORT || 5000;
 
 app.use(morgan("dev"));
 app.use(helmet());
+
+app.use(credentials)
 app.use(cors({
     origin: "http://localhost:3000",
-    optionsSuccessStatus: 200
+    optionsSuccessStatus: 200,
 }))
 app.use(cookieParser());
 app.use(express.json());

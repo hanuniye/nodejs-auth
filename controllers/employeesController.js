@@ -20,7 +20,7 @@ const addEmployee = async (req, res) => {
 const getEmployees = async (req, res) => {
     try {
         const employee = await employeeDB.find();
-        console.log(employee);
+        // console.log(employee);
         if(!employee || employee.length < 1) return res.status(NOT_FOUND).json({msg: "no resource found!!"});
         
         res.status(OK).json({msg: employee});
